@@ -13,6 +13,15 @@ const api = axios.create({
   },
 });
 
+// Add token to requests if it exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // ==================== PRODUCTS ====================
 
 export const getProducts = async () => {
@@ -49,6 +58,23 @@ export const getSales = async () => {
 
 export const getSaleById = async (id) => {
   const response = await api.get(`/sales/${id}`);
+  return response.data;
+};
+
+// ==================== AUTHENTICATION ====================
+
+export const register = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const login = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
   return response.data;
 };
 

@@ -13,8 +13,15 @@ const Sale = sequelize.define("Sale", {
     payment_method: {
         type: DataTypes.STRING,
         defaultValue: 'Cash',
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Allow null for backwards compatibility with existing sales
+        references: {
+            model: 'Users',
+            key: 'id'
+        }
     }
-    // I can add cashier_id, customer info, etc... if needed later!
 });
 
 module.exports = Sale;
