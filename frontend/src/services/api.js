@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Base URL for your backend API
-const API_URL = 'https://wipos-production.up.railway.app/api';
+// In development: uses localhost
+// In production: uses the VITE_API_URL environment variable or defaults to Railway
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
