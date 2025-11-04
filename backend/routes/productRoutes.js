@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const { authenticateToken, isAdmin } = require("./authRoutes");
 
-// Create
-router.post("/", async (req, res) => {
+// Create (Admin only)
+router.post("/", authenticateToken, isAdmin, async (req, res) => {
     try {
         const newProduct = await Product.create(req.body);
         res.json(newProduct);
@@ -12,8 +13,8 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Read all
-router.get("/", async (req, res) => {
+// Read all (Everyone can view products)
+router.get("/", authenticateToken, async (req, res) => {
     try {
         const products = await Product.findAll();
         res.json(products);
@@ -22,8 +23,8 @@ router.get("/", async (req, res) => {
     }
 });
 
-// Update
-router.put("/:id", async (req, res) => {
+// Update (Admin only)
+router.put("/:id", authenticateToken, isAdmin, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         if (!product) return res.status(404).json({ error: "Product not found" });
@@ -34,8 +35,8 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-// Delete
-router.delete("/:id", async (req, res) => {
+// Delete (Admin only)
+router.delete("/:id", authenticateToken, isAdmin, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         if (!product) return res.status(404).json({ error: "Product not found" });

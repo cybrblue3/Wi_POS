@@ -3,10 +3,12 @@ const router = express.Router();
 const Sale = require("../models/Sale");
 const SaleItem = require("../models/SaleItem");
 const Product = require("../models/Product");
+const User = require("../models/User");
 const sequelize = require("../config/db");
+const { authenticateToken } = require("./authRoutes");
 
-// CREATE a new sale
-router.post("/", async (req, res) => {
+// CREATE a new sale (All authenticated users can create sales)
+router.post("/", authenticateToken, async (req, res) => {
     // req.body should look like:
     // {
     //   items: [
@@ -59,11 +61,12 @@ router.post("/", async (req, res) => {
             await product.save({ transaction });
         }
 
-        // Create the Sale
+        // Create the Sale (with userId from authenticated user)
         const sale = await Sale.create(
             {
                 total_amount: totalAmount,
-                payment_method: payment_method || 'Cash'
+                payment_method: payment_method || 'Cash',
+                userId: req.user.id  // Track which user made this sale
             },
             { transaction }
         );
@@ -94,10 +97,30 @@ router.post("/", async (req, res) => {
     }
 });
 
-// GET all sales
-router.get("/", async (req, res) => {
+// GET all sales (filtered by role)
+router.get("/", authenticateToken, async (req, res) => {
     try {
+        // Admin can see all sales (including old ones without userId)
+        // Cashiers only see their own sales
+        const { Op } = require('sequelize');
+        const whereClause = req.user.role === 'admin'
+            ? {}
+            : {
+                [Op.or]: [
+                    { userId: req.user.id },
+                    { userId: null } // Show old sales without userId to all users
+                ]
+              };
+
         const sales = await Sale.findAll({
+            where: whereClause,
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'username', 'role'], // Include user info
+                    required: false // Allow sales without a user (old sales)
+                }
+            ],
             order: [['createdAt', 'DESC']], // Most recent first
         });
         res.json(sales);
@@ -107,7 +130,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET one sale with all its items and product details
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticateToken, async (req, res) => {
     try {
         const sale = await Sale.findByPk(req.params.id, {
             include: [
@@ -115,11 +138,20 @@ router.get("/:id", async (req, res) => {
                     model: SaleItem,
                     include: [Product], // Include product details for each item
                 },
+                {
+                    model: User,
+                    attributes: ['id', 'username', 'role']
+                }
             ],
         });
 
         if (!sale) {
             return res.status(404).json({ error: "Sale not found" });
+        }
+
+        // Cashiers can only view their own sales, admins can view all
+        if (req.user.role !== 'admin' && sale.userId !== req.user.id) {
+            return res.status(403).json({ error: 'Access denied. You can only view your own sales.' });
         }
 
         res.json(sale);

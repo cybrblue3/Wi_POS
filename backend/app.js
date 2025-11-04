@@ -30,7 +30,8 @@ const salesRoutes = require("./routes/salesRoutes");
 const { router: authRoutes } = require("./routes/authRoutes");
 
 // Sync database (creates tables if they don't exist)
-sequelize.sync();
+// Using alter: true temporarily to update existing tables with new columns
+sequelize.sync({ alter: true });
 
 const app = express();
 app.use(cors());

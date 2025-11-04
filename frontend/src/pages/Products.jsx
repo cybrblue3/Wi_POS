@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../services/api';
 import './Products.css';
 
-function Products() {
+function Products({ currentUser }) {
+  const isAdmin = currentUser?.role === 'admin';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -116,7 +117,7 @@ function Products() {
     <div className="products-page">
       <div className="page-header">
         <h2>Product Management</h2>
-        {!showForm && (
+        {!showForm && isAdmin && (
           <button className="btn-primary" onClick={() => setShowForm(true)}>
             + Add Product
           </button>
@@ -280,18 +281,24 @@ function Products() {
                     </span>
                   </td>
                   <td className="actions">
-                    <button
-                      className="btn-edit"
-                      onClick={() => handleEdit(product)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Delete
-                    </button>
+                    {isAdmin ? (
+                      <>
+                        <button
+                          className="btn-edit"
+                          onClick={() => handleEdit(product)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn-delete"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="read-only-badge">View Only</span>
+                    )}
                   </td>
                 </tr>
               ))}

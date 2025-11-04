@@ -70,7 +70,7 @@ function App() {
               path="/products"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Products />
+                  <Products currentUser={currentUser} />
                 </ProtectedRoute>
               }
             />

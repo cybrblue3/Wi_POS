@@ -103,6 +103,14 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// Middleware to check if user is admin
+const isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+    next();
+};
+
 // Get current user info (protected route)
 router.get('/me', authenticateToken, async (req, res) => {
     try {
@@ -121,4 +129,4 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = { router, authenticateToken };
+module.exports = { router, authenticateToken, isAdmin };
